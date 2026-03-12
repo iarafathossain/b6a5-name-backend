@@ -2,6 +2,8 @@ import { toNodeHandler } from "better-auth/node";
 import express, { Application } from "express";
 import path from "path";
 import { auth } from "./libs/auth";
+import { globalErrorHandler } from "./middlewares/global-error-handler";
+import { notFoundHandler } from "./middlewares/not-found";
 import { indexRoutes } from "./routes/index";
 
 const app: Application = express();
@@ -22,5 +24,11 @@ app.use("/api/v1", indexRoutes);
 app.get("/", (req, res) => {
   res.sendFile(path.join(process.cwd(), "public", "index.html"));
 });
+
+// Global error handler
+app.use(globalErrorHandler);
+
+// not found route handler
+app.use(notFoundHandler);
 
 export default app;
