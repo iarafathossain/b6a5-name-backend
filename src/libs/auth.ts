@@ -58,23 +58,7 @@ export const auth = betterAuth({
     sendOnSignUp: true,
     autoSignInAfterVerification: true,
   },
-  socialProviders: {
-    google: {
-      clientId: envVariables.GOOGLE_CLIENT_ID,
-      clientSecret: envVariables.GOOGLE_CLIENT_SECRET,
-      // callbackUrl: envVariables.GOOGLE_CALLBACK_URL,
-      mapProfileToUser: () => {
-        return {
-          emailVerified: true,
-          role: Role.MERCHANT,
-          status: UserStatus.ACTIVE,
-          isDeleted: false,
-          needPasswordChange: false,
-          deletedAt: null,
-        };
-      },
-    },
-  },
+
   redirectURLs: {
     signIn: `${envVariables.BETTER_AUTH_URL}/api/v1/auth/google/success`,
   },
