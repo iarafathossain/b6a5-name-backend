@@ -11,3 +11,13 @@ export interface IJwtPayload {
   iat?: number;
   exp?: number;
 }
+
+export interface IRequestUser {
+  userId: string;
+  email: string;
+  role: Role;
+  name: string;
+  status: UserStatus;
+  isDeleted: boolean;
+  emailVerified: boolean;
+}

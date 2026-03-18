@@ -1,9 +1,15 @@
 import status from "http-status";
 import AppError from "../../errors/app-error";
+import { UserStatus } from "../../generated/prisma/enums";
+import { IRequestUser } from "../../interfaces/auth-type";
 import { auth } from "../../libs/auth";
 import { prisma } from "../../libs/prisma";
 import { tokenUtils } from "../../utils/token";
-import { RegisterMerchantZodSchema } from "./validators";
+import {
+  LoginUserZodSchema,
+  RegisterMerchantZodSchema,
+  VerifyEmailZodSchema,
+} from "./validators";
 
 const registerMerchant = async (payload: RegisterMerchantZodSchema) => {
   const { email, password, contactNumber, name, businessName, pickupAddress } =
@@ -76,6 +82,7 @@ const registerMerchant = async (payload: RegisterMerchantZodSchema) => {
       accessToken,
       refreshToken,
       sessionToken,
+      requiresEmailVerification: !sessionToken,
     };
   } catch (error) {
     // delete the user if merchant creation failed
@@ -91,15 +98,13 @@ const registerMerchant = async (payload: RegisterMerchantZodSchema) => {
   }
 };
 
-const verifyEmail = async (email: string, otp: string) => {
+const verifyEmail = async (payload: VerifyEmailZodSchema) => {
   const result = await auth.api.verifyEmailOTP({
     body: {
-      email,
-      otp,
+      email: payload.email,
+      otp: payload.otp,
     },
   });
-
-  console.log("Email verification result:", result);
 
   if (result.status && !result.user.emailVerified) {
     await prisma.user.update({
@@ -112,10 +117,120 @@ const verifyEmail = async (email: string, otp: string) => {
     });
   }
 
-  return result;
+  const accessToken = result.token
+    ? tokenUtils.getAccessToken({
+        userId: result.user.id,
+        email: result.user.email,
+        role: result.user.role,
+        name: result.user.name,
+        status: result.user.status,
+        isDeleted: result.user.isDeleted,
+        emailVerified: result.user.emailVerified,
+      })
+    : null;
+
+  const refreshToken = result.token
+    ? tokenUtils.getRefreshToken({
+        userId: result.user.id,
+        email: result.user.email,
+        role: result.user.role,
+        name: result.user.name,
+        status: result.user.status,
+        isDeleted: result.user.isDeleted,
+        emailVerified: result.user.emailVerified,
+      })
+    : null;
+
+  return {
+    status: result.status,
+    user: result.user,
+    sessionToken: result.token,
+    accessToken,
+    refreshToken,
+  };
+};
+
+const loginUser = async (payload: LoginUserZodSchema) => {
+  const { email, password } = payload;
+
+  const { user, token: sessionToken } = await auth.api.signInEmail({
+    body: {
+      email,
+      password,
+    },
+  });
+
+  // check if the user is authenticated
+  if (!user) {
+    throw new AppError("Invalid email or password", status.UNAUTHORIZED);
+  }
+
+  // check if a user is blocked
+  if (user.status === UserStatus.BLOCKED) {
+    throw new AppError(
+      "Your account is blocked. Please contact support.",
+      status.UNAUTHORIZED,
+    );
+  }
+
+  // check if a user is deleted
+  if (user.isDeleted || user.status === UserStatus.DELETED) {
+    throw new AppError(
+      "Your account has been deleted. Please contact support.",
+      status.UNAUTHORIZED,
+    );
+  }
+
+  const accessToken = tokenUtils.getAccessToken({
+    userId: user.id,
+    email: user.email,
+    role: user.role,
+    name: user.name,
+    status: user.status,
+    isDeleted: user.isDeleted,
+    emailVerified: user.emailVerified,
+  });
+
+  const refreshToken = tokenUtils.getRefreshToken({
+    userId: user.id,
+    email: user.email,
+    role: user.role,
+    name: user.name,
+    status: user.status,
+    isDeleted: user.isDeleted,
+    emailVerified: user.emailVerified,
+  });
+
+  return { user, accessToken, refreshToken, sessionToken };
+};
+
+const getMe = async (user: IRequestUser) => {
+  const isUserExist = await prisma.user.findUnique({
+    where: {
+      id: user.userId,
+    },
+    include: {
+      merchantProfile: {
+        include: {
+          parcels: true,
+        },
+      },
+
+      adminProfile: true,
+      riderProfile: true,
+    },
+  });
+
+  if (!isUserExist) {
+    throw new AppError("User not found", status.NOT_FOUND);
+  }
+
+  return isUserExist;
 };
 
 export const authServices = {
   registerMerchant,
   verifyEmail,
+  loginUser,
+  getMe,
 };

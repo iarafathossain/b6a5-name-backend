@@ -12,7 +12,7 @@ const setCookie = (
 
 // Get cookie
 const getCookie = (req: Request, key: string) => {
-  return req.cookies[key];
+  return req.cookies?.[key];
 };
 
 // Clear Cookie

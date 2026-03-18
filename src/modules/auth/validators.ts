@@ -42,3 +42,20 @@ export const registerMerchantZodSchema = zod
 export type RegisterMerchantZodSchema = zod.infer<
   typeof registerMerchantZodSchema
 >;
+
+export const verifyEmailZodSchema = zod.object({
+  email: zod.email("Invalid email address"),
+  otp: zod
+    .string()
+    .min(1, "OTP is required")
+    .max(6, "OTP must be at most 6 characters long"),
+});
+
+export type VerifyEmailZodSchema = zod.infer<typeof verifyEmailZodSchema>;
+
+export const loginUserZodSchema = zod.object({
+  email: zod.email("Invalid email address"),
+  password: zod.string().min(1, "Password is required"),
+});
+
+export type LoginUserZodSchema = zod.infer<typeof loginUserZodSchema>;
