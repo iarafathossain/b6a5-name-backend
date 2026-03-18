@@ -4,7 +4,7 @@ import { envVariables } from "../config/env";
 import { cookieUtils } from "./cookie";
 import { jwtUtils } from "./jwt";
 
-const parseDurationToMs = (duration: string): number => {
+export const parseDurationToMs = (duration: string): number => {
   const parsedDuration = duration.trim().toLowerCase();
   const match = parsedDuration.match(/^(\d+)(ms|s|m|h|d)$/);
 

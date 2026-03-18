@@ -59,3 +59,47 @@ export const loginUserZodSchema = zod.object({
 });
 
 export type LoginUserZodSchema = zod.infer<typeof loginUserZodSchema>;
+
+export const changePasswordZodSchema = zod.object({
+  currentPassword: zod.string().min(1, "Current password is required"),
+  newPassword: zod
+    .string()
+    .min(1, "New password is required")
+    .min(8, "New password must be at least 8 characters long")
+    .max(50, "New password must be at most 50 characters long")
+    .regex(/[A-Z]/, "New password must contain at least one uppercase letter")
+    .regex(/[a-z]/, "New password must contain at least one lowercase letter")
+    .regex(/[0-9]/, "New password must contain at least one number")
+    .regex(
+      /[@$!%*?&]/,
+      "New password must contain at least one special character (@, $, !, %, *, ?, &)",
+    ),
+});
+export type ChangePasswordZodSchema = zod.infer<typeof changePasswordZodSchema>;
+
+export const forgotPasswordZodSchema = zod.object({
+  email: zod.email("Invalid email address"),
+});
+export type ForgotPasswordZodSchema = zod.infer<typeof forgotPasswordZodSchema>;
+
+export const resetPasswordZodSchema = zod.object({
+  email: zod.email("Invalid email address"),
+  otp: zod
+    .string()
+    .min(1, "OTP is required")
+    .max(6, "OTP must be at most 6 characters long"),
+  newPassword: zod
+    .string()
+    .min(1, "New password is required")
+    .min(8, "New password must be at least 8 characters long")
+    .max(50, "New password must be at most 50 characters long")
+    .regex(/[A-Z]/, "New password must contain at least one uppercase letter")
+    .regex(/[a-z]/, "New password must contain at least one lowercase letter")
+    .regex(/[0-9]/, "New password must contain at least one number")
+    .regex(
+      /[@$!%*?&]/,
+      "New password must contain at least one special character (@, $, !, %, *, ?, &)",
+    ),
+});
+
+export type ResetPasswordZodSchema = zod.infer<typeof resetPasswordZodSchema>;

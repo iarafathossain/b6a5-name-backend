@@ -1,15 +1,59 @@
 import status from "http-status";
+import { envVariables } from "../../config/env";
 import AppError from "../../errors/app-error";
 import { UserStatus } from "../../generated/prisma/enums";
 import { IRequestUser } from "../../interfaces/auth-type";
 import { auth } from "../../libs/auth";
 import { prisma } from "../../libs/prisma";
-import { tokenUtils } from "../../utils/token";
+import { jwtUtils } from "../../utils/jwt";
+import { parseDurationToMs, tokenUtils } from "../../utils/token";
 import {
+  ChangePasswordZodSchema,
+  ForgotPasswordZodSchema,
   LoginUserZodSchema,
   RegisterMerchantZodSchema,
+  ResetPasswordZodSchema,
   VerifyEmailZodSchema,
 } from "./validators";
+
+const checkUser = async (email: string) => {
+  // check if the user exists with the given email
+  const user = await prisma.user.findUnique({
+    where: {
+      email,
+    },
+  });
+
+  if (!user) {
+    throw new AppError(
+      status.NOT_FOUND,
+      "User with the given email does not exist",
+    );
+  }
+
+  if (!user.emailVerified) {
+    throw new AppError(
+      status.BAD_REQUEST,
+      "Email is not verified. Please verify your email before resetting password.",
+    );
+  }
+
+  if (user.isDeleted || user.status === UserStatus.DELETED) {
+    throw new AppError(
+      status.BAD_REQUEST,
+      "Your account has been deleted. Please contact support.",
+    );
+  }
+
+  if (user.status === UserStatus.BLOCKED) {
+    throw new AppError(
+      status.BAD_REQUEST,
+      "Your account is blocked. Please contact support.",
+    );
+  }
+
+  return user;
+};
 
 const registerMerchant = async (payload: RegisterMerchantZodSchema) => {
   const { email, password, contactNumber, name, businessName, pickupAddress } =
@@ -23,7 +67,7 @@ const registerMerchant = async (payload: RegisterMerchantZodSchema) => {
   });
 
   if (existingUser) {
-    throw new AppError("Email already exists", status.BAD_REQUEST);
+    throw new AppError(status.BAD_REQUEST, "Email already exists");
   }
 
   // step 2: create new user with better-auth
@@ -37,7 +81,7 @@ const registerMerchant = async (payload: RegisterMerchantZodSchema) => {
   });
 
   if (!user) {
-    throw new AppError("Failed to create user", status.INTERNAL_SERVER_ERROR);
+    throw new AppError(status.INTERNAL_SERVER_ERROR, "Failed to create user");
   }
 
   try {
@@ -92,8 +136,8 @@ const registerMerchant = async (payload: RegisterMerchantZodSchema) => {
       },
     });
     throw new AppError(
-      "Failed to create merchant account",
       status.INTERNAL_SERVER_ERROR,
+      "Failed to create merchant account",
     );
   }
 };
@@ -162,22 +206,22 @@ const loginUser = async (payload: LoginUserZodSchema) => {
 
   // check if the user is authenticated
   if (!user) {
-    throw new AppError("Invalid email or password", status.UNAUTHORIZED);
+    throw new AppError(status.UNAUTHORIZED, "Invalid email or password");
   }
 
   // check if a user is blocked
   if (user.status === UserStatus.BLOCKED) {
     throw new AppError(
-      "Your account is blocked. Please contact support.",
       status.UNAUTHORIZED,
+      "Your account is blocked. Please contact support.",
     );
   }
 
   // check if a user is deleted
   if (user.isDeleted || user.status === UserStatus.DELETED) {
     throw new AppError(
-      "Your account has been deleted. Please contact support.",
       status.UNAUTHORIZED,
+      "Your account has been deleted. Please contact support.",
     );
   }
 
@@ -222,10 +266,198 @@ const getMe = async (user: IRequestUser) => {
   });
 
   if (!isUserExist) {
-    throw new AppError("User not found", status.NOT_FOUND);
+    throw new AppError(status.NOT_FOUND, "User not found");
   }
 
   return isUserExist;
+};
+
+const getNewTokens = async (refreshToken: string, sessionToken: string) => {
+  // check the existing session token
+  const existingSessiontoken = await prisma.session.findUnique({
+    where: {
+      token: sessionToken,
+    },
+    include: {
+      user: true,
+    },
+  });
+
+  if (!existingSessiontoken) {
+    throw new AppError(status.UNAUTHORIZED, "Invalid token");
+  }
+
+  // check if the refresh token is valid
+  const verifiedRefreshToken = jwtUtils.verifyToken(
+    refreshToken,
+    envVariables.REFRESH_TOKEN_SECRET,
+  );
+
+  if (
+    !verifiedRefreshToken ||
+    verifiedRefreshToken.data?.userId !== existingSessiontoken.userId ||
+    verifiedRefreshToken.data?.isDeleted ||
+    verifiedRefreshToken.data?.status === UserStatus.BLOCKED
+  ) {
+    throw new AppError(status.UNAUTHORIZED, "Invalid token");
+  }
+
+  const verifiedUser = verifiedRefreshToken.data;
+
+  const newAccessToken = tokenUtils.getAccessToken({
+    userId: verifiedUser.userId,
+    email: verifiedUser.email,
+    role: verifiedUser.role,
+    name: verifiedUser.name,
+    status: verifiedUser.status,
+    isDeleted: verifiedUser.isDeleted,
+    emailVerified: verifiedUser.emailVerified,
+  });
+
+  const newRefreshToken = tokenUtils.getRefreshToken({
+    userId: verifiedUser.userId,
+    email: verifiedUser.email,
+    role: verifiedUser.role,
+    name: verifiedUser.name,
+    status: verifiedUser.status,
+    isDeleted: verifiedUser.isDeleted,
+    emailVerified: verifiedUser.emailVerified,
+  });
+
+  // update the session with the new expiry time
+  const { token: newSessionToken } = await prisma.session.update({
+    where: {
+      token: sessionToken,
+    },
+    data: {
+      expiresAt: new Date(
+        Date.now() +
+          parseDurationToMs(envVariables.BETTER_AUTH_SESSION_COOKIE_MAX_AGE),
+      ),
+      createdAt: new Date(),
+    },
+  });
+
+  return {
+    newAccessToken,
+    newRefreshToken,
+    newSessionToken,
+  };
+};
+
+const changePassword = async (
+  payload: ChangePasswordZodSchema,
+  sessionToken: string,
+) => {
+  const { currentPassword, newPassword } = payload;
+
+  // check the existing session token
+  const existingSessionToken = await auth.api.getSession({
+    headers: new Headers({
+      Authorization: `Bearer ${sessionToken}`,
+    }),
+  });
+
+  if (!existingSessionToken) {
+    throw new AppError(status.UNAUTHORIZED, "Invalid token");
+  }
+
+  // change the password using BetterAuth API
+  const { user, token: newSessionToken } = await auth.api.changePassword({
+    body: {
+      newPassword: newPassword,
+      currentPassword: currentPassword,
+      revokeOtherSessions: true,
+    },
+    headers: new Headers({
+      Authorization: `Bearer ${sessionToken}`,
+    }),
+  });
+
+  // update the needPasswordChange flag to false in the database if needPasswordChange is true
+  if (existingSessionToken.user.needPasswordChange) {
+    await prisma.user.update({
+      where: {
+        id: existingSessionToken.user.id,
+      },
+      data: {
+        needPasswordChange: false,
+      },
+    });
+  }
+
+  // create a new access token and refresh token for the user after password change
+  const newAccessToken = tokenUtils.getAccessToken({
+    userId: existingSessionToken.user.id,
+    email: existingSessionToken.user.email,
+    role: existingSessionToken.user.role,
+    name: existingSessionToken.user.name,
+    status: existingSessionToken.user.status,
+    isDeleted: existingSessionToken.user.isDeleted,
+    emailVerified: existingSessionToken.user.emailVerified,
+  });
+
+  const newRefreshToken = tokenUtils.getRefreshToken({
+    userId: existingSessionToken.user.id,
+    email: existingSessionToken.user.email,
+    role: existingSessionToken.user.role,
+    name: existingSessionToken.user.name,
+    status: existingSessionToken.user.status,
+    isDeleted: existingSessionToken.user.isDeleted,
+    emailVerified: existingSessionToken.user.emailVerified,
+  });
+
+  return {
+    newAccessToken,
+    newRefreshToken,
+    newSessionToken,
+    user,
+  };
+};
+
+const logout = async (sessionToken: string) => {
+  return await auth.api.signOut({
+    headers: new Headers({
+      Authorization: `Bearer ${sessionToken}`,
+    }),
+  });
+};
+
+const forgetPassword = async (payload: ForgotPasswordZodSchema) => {
+  const { email } = payload;
+
+  await checkUser(email);
+
+  // send password reset OTP to the user's email
+  await auth.api.requestPasswordResetEmailOTP({
+    body: {
+      email,
+    },
+  });
+};
+
+const resetPassword = async (payload: ResetPasswordZodSchema) => {
+  const { email, otp, newPassword } = payload;
+  const user = await checkUser(email);
+
+  await auth.api.resetPasswordEmailOTP({
+    body: {
+      email,
+      otp,
+      password: newPassword,
+    },
+  });
+
+  if (user.needPasswordChange) {
+    await prisma.user.update({
+      where: {
+        id: user.id,
+      },
+      data: {
+        needPasswordChange: false,
+      },
+    });
+  }
 };
 
 export const authServices = {
@@ -233,4 +465,9 @@ export const authServices = {
   verifyEmail,
   loginUser,
   getMe,
+  getNewTokens,
+  logout,
+  changePassword,
+  forgetPassword,
+  resetPassword,
 };

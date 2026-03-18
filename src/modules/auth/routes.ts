@@ -3,8 +3,11 @@ import { checkAuth } from "../../middlewares/check-auth";
 import { validateRequest } from "../../middlewares/validate-request";
 import { authControllers } from "./controllers";
 import {
+  changePasswordZodSchema,
+  forgotPasswordZodSchema,
   loginUserZodSchema,
   registerMerchantZodSchema,
+  resetPasswordZodSchema,
   verifyEmailZodSchema,
 } from "./validators";
 
@@ -36,6 +39,42 @@ router.get(
   "/me",
   checkAuth("ADMIN", "MERCHANT", "RIDER", "SUPER_ADMIN"),
   authControllers.getMe,
+);
+
+// GET: api/v1/auth/refresh-tokens (get new access and refresh tokens)
+router.get(
+  "/refresh-tokens",
+  checkAuth("ADMIN", "MERCHANT", "RIDER", "SUPER_ADMIN"),
+  authControllers.getNewTokens,
+);
+
+// POST: api/v1/auth/logout (logout a user)
+router.post(
+  "/logout",
+  checkAuth("ADMIN", "MERCHANT", "RIDER", "SUPER_ADMIN"),
+  authControllers.logout,
+);
+
+// POST: api/v1/auth/change-password (change password for logged in user)
+router.post(
+  "/change-password",
+  validateRequest(changePasswordZodSchema),
+  checkAuth("ADMIN", "MERCHANT", "RIDER", "SUPER_ADMIN"),
+  authControllers.changePassword,
+);
+
+// POST: api/v1/auth/forget-password (initiate password reset)
+router.post(
+  "/forget-password",
+  validateRequest(forgotPasswordZodSchema),
+  authControllers.forgetPassword,
+);
+
+// POST: api/v1/auth/reset-password (reset password with token)
+router.post(
+  "/reset-password",
+  validateRequest(resetPasswordZodSchema),
+  authControllers.resetPassword,
 );
 
 export const authRoutes = router;

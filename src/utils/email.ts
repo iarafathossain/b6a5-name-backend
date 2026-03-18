@@ -74,6 +74,6 @@ export const sendEmail = async ({
     console.log(`Email sent to ${to} : ${info.messageId}`);
   } catch (error: unknown) {
     console.log("Email Sending Error", getError(error));
-    throw new AppError(getError(error), status.INTERNAL_SERVER_ERROR);
+    throw new AppError(status.INTERNAL_SERVER_ERROR, getError(error));
   }
 };

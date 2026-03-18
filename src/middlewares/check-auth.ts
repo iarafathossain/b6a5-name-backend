@@ -20,8 +20,8 @@ export const checkAuth =
       if (!sessionToken) {
         return next(
           new AppError(
-            "Unauthorized Access! No session token provided",
             status.UNAUTHORIZED,
+            "Unauthorized Access! No session token provided",
           ),
         );
       }
@@ -41,8 +41,8 @@ export const checkAuth =
       if (!sessionExists || !sessionExists.user) {
         return next(
           new AppError(
-            "Unauthorized Access! Invalid session token",
             status.UNAUTHORIZED,
+            "Unauthorized Access! Invalid session token",
           ),
         );
       }
@@ -75,8 +75,8 @@ export const checkAuth =
         if (user.status === "BLOCKED" || user.status === "DELETED") {
           return next(
             new AppError(
-              "Unauthorized Access! User is not active",
               status.UNAUTHORIZED,
+              "Unauthorized Access! User is not active",
             ),
           );
         }
@@ -84,8 +84,8 @@ export const checkAuth =
         if (user.isDeleted) {
           return next(
             new AppError(
-              "Unauthorized Access! User is deleted",
               status.UNAUTHORIZED,
+              "Unauthorized Access! User is deleted",
             ),
           );
         }
@@ -93,8 +93,8 @@ export const checkAuth =
         if (authRoles.length > 0 && !authRoles.includes(user.role)) {
           return next(
             new AppError(
-              "Forbidden Access! You don't have permission to access this resource",
               status.FORBIDDEN,
+              "Forbidden Access! You don't have permission to access this resource",
             ),
           );
         }
@@ -118,8 +118,8 @@ export const checkAuth =
       if (!accessToken) {
         return next(
           new AppError(
-            "Unauthorized Access! No access token provided",
             status.UNAUTHORIZED,
+            "Unauthorized Access! No access token provided",
           ),
         );
       }
@@ -133,8 +133,8 @@ export const checkAuth =
       if (!success || !data) {
         return next(
           new AppError(
-            "Unauthorized Access! Invalid access token",
             status.UNAUTHORIZED,
+            "Unauthorized Access! Invalid access token",
           ),
         );
       }
@@ -142,8 +142,8 @@ export const checkAuth =
       if (authRoles.length > 0 && !authRoles.includes(data.role)) {
         return next(
           new AppError(
-            "Forbidden Access! You don't have permission to access this resource",
             status.FORBIDDEN,
+            "Forbidden Access! You don't have permission to access this resource",
           ),
         );
       }
