@@ -4,9 +4,9 @@ model User {
     email              String
     emailVerified      Boolean    @default(false)
     image              String?
-    contactNumber      String?
-    gender             Gender
-    role               Role
+    contactNumber      String     @db.VarChar(11)
+    gender             Gender?
+    role               Role       @default(MERCHANT)
     status             UserStatus @default(ACTIVE) // ACTIVE, BLOCKED, etc.
     needPasswordChange Boolean    @default(false)
     isDeleted          Boolean    @default(false)

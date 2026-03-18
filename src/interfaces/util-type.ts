@@ -23,6 +23,9 @@ export interface IEnvConfig {
   REFRESH_TOKEN_SECRET: string;
   ACCESS_TOKEN_EXPIRES_IN: string;
   REFRESH_TOKEN_EXPIRES_IN: string;
+  ACCESS_TOKEN_COOKIE_MAX_AGE: string;
+  REFRESH_TOKEN_COOKIE_MAX_AGE: string;
+  BETTER_AUTH_SESSION_COOKIE_MAX_AGE: string;
   EMAIL_SENDER: {
     SMTP_HOST: string;
     SMTP_PORT: string;

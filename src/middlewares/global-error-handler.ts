@@ -2,6 +2,7 @@ import { NextFunction, Request, Response } from "express";
 import status from "http-status";
 import * as zod from "zod";
 import { envVariables } from "../config/env";
+import AppError from "../errors/app-error";
 import { handleZodError } from "../errors/handle-zod-error";
 import {
   handlePrismaClientKnownRequestError,
