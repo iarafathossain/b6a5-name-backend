@@ -32,6 +32,7 @@ const loadEnvironmentVariables = (): IEnvConfig => {
     "SUPER_ADMIN_PASSWORD",
     "SUPER_ADMIN_GENDER",
     "SUPER_ADMIN_NAME",
+    "SUPER_ADMIN_PHONE",
   ];
 
   requiredEnvVars.forEach((variable) => {
@@ -77,6 +78,7 @@ const loadEnvironmentVariables = (): IEnvConfig => {
     SUPER_ADMIN_PASSWORD: process.env.SUPER_ADMIN_PASSWORD!,
     SUPER_ADMIN_GENDER: process.env.SUPER_ADMIN_GENDER! as Gender,
     SUPER_ADMIN_NAME: process.env.SUPER_ADMIN_NAME!,
+    SUPER_ADMIN_PHONE: process.env.SUPER_ADMIN_PHONE!,
   };
 };
 

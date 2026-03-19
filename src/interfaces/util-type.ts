@@ -48,6 +48,7 @@ export interface IEnvConfig {
   SUPER_ADMIN_PASSWORD: string;
   SUPER_ADMIN_GENDER: Gender;
   SUPER_ADMIN_NAME: string;
+  SUPER_ADMIN_PHONE: string;
 }
 
 export interface IErrorSource {

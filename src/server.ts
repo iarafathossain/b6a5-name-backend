@@ -2,12 +2,14 @@ import { Server } from "http";
 import app from "./app";
 import { envVariables } from "./config/env";
 import { prisma } from "./libs/prisma";
+import { seedSuperAdmin } from "./utils/seed";
 
 let server: Server;
 
 const main = async () => {
   try {
     await prisma.$connect();
+    await seedSuperAdmin();
     console.log("✅Database connected successfully.");
     server = app.listen(envVariables.PORT, () => {
       console.log(`Server is running on port ${envVariables.PORT}`);

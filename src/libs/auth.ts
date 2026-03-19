@@ -67,6 +67,11 @@ export const auth = betterAuth({
     emailOTP({
       overrideDefaultEmailVerification: true,
       async sendVerificationOTP({ email, otp, type }) {
+        // Skip email sending during seeding
+        if (process.env.SKIP_EMAIL_VERIFICATION === "true") {
+          return;
+        }
+
         // send email verification OTP
         if (type === "email-verification") {
           const user = await prisma.user.findUnique({
