@@ -33,11 +33,6 @@ enum DeliveryMethod {
     PICKUP_POINT
 }
 
-enum ServiceType {
-    REGULAR_PICKUP
-    PICK_AND_DROP
-}
-
 enum UserStatus {
     ACTIVE
     BLOCKED

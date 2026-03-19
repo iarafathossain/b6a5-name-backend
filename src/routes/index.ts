@@ -3,6 +3,7 @@ import { areaRoutes } from "../modules/area/routes";
 import { authRoutes } from "../modules/auth/routes";
 import { categoryRoutes } from "../modules/category/routes";
 import { hubRoutes } from "../modules/hub/routes";
+import { serviceRoutes } from "../modules/service/routes";
 import { userRoutes } from "../modules/user/routes";
 import { zoneRoutes } from "../modules/zone/routes";
 const router = Router();
@@ -21,6 +22,9 @@ router.use("/categories", categoryRoutes);
 
 // using hub routes
 router.use("/hubs", hubRoutes);
+
+// using service routes
+router.use("/services", serviceRoutes);
 
 // using zone routes
 router.use("/zones", zoneRoutes);

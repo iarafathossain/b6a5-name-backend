@@ -10,9 +10,10 @@ model PricingRule {
     categoryId String?         @db.Uuid
     category   ParcelCategory? @relation(fields: [categoryId], references: [id])
 
-    serviceType ServiceType
+    serviceId String  @db.Uuid
+    service   Service @relation(fields: [serviceId], references: [id])
 
-    // Financials & Weight constraints
+    // Financial & Weight constraints
     minWeight Float
     maxWeight Float
     price     Decimal @db.Decimal(10, 2)

@@ -29,7 +29,8 @@ model Parcel {
     // Parcel Details
     status         ParcelStatus   @default(REQUESTED)
     speed          DeliverySpeed
-    serviceType    ServiceType
+    serviceId      String         @db.Uuid
+    service        Service        @relation(fields: [serviceId], references: [id])
     deliveryMethod DeliveryMethod @default(HOME_DELIVERY)
 
     weight    Float
