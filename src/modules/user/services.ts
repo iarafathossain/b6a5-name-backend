@@ -4,7 +4,7 @@ import { getError } from "../../errors/get-error";
 import { Role } from "../../generated/prisma/enums";
 import { auth } from "../../libs/auth";
 import { prisma } from "../../libs/prisma";
-import { CreateAdminZodSchema } from "./validators";
+import { CreateAdminZodSchema, CreateRiderZodSchema } from "./validators";
 
 const createAdmin = async (payload: CreateAdminZodSchema) => {
   const { password, admin } = payload;
@@ -79,11 +79,105 @@ const createAdmin = async (payload: CreateAdminZodSchema) => {
   }
 };
 
-/**
- TODO: create rider service.
- By following create-admin pattern complete create-rider route -> controller -> service
- */
+const createRider = async (payload: CreateRiderZodSchema) => {
+  const { password, rider } = payload;
+  const {
+    name,
+    email,
+    contactNumber,
+    gender,
+    presentAddress,
+    permanentAddress,
+    age,
+    hubId,
+  } = rider;
+
+  // validate hub existence for rider assignment
+  const existingHub = await prisma.hub.findUnique({
+    where: {
+      id: hubId,
+    },
+  });
+
+  if (!existingHub) {
+    throw new AppError(status.NOT_FOUND, "Hub not found");
+  }
+
+  // validate user existence
+  const existingUser = await prisma.user.findUnique({
+    where: {
+      email,
+    },
+  });
+
+  if (existingUser) {
+    throw new AppError(
+      status.BAD_REQUEST,
+      "User with this email already exists",
+    );
+  }
+
+  // sign up user with better auth
+  const { user } = await auth.api.signUpEmail({
+    body: {
+      email,
+      password,
+      name,
+      role: Role.RIDER,
+      contactNumber,
+      gender,
+      needPasswordChange: true,
+      rememberMe: false,
+    },
+  });
+
+  if (!user) {
+    throw new AppError(status.INTERNAL_SERVER_ERROR, "Failed to create user");
+  }
+
+  // create rider record in transaction
+  try {
+    return await prisma.$transaction(async (tx) => {
+      const createdRider = await tx.rider.create({
+        data: {
+          userId: user.id,
+          presentAddress,
+          permanentAddress,
+          age,
+          hubId,
+        },
+      });
+
+      // fetch the created rider with user details
+      return await tx.rider.findUnique({
+        where: {
+          id: createdRider.id,
+        },
+        include: {
+          user: true,
+          hub: true,
+        },
+      });
+    });
+  } catch (error: unknown) {
+    try {
+      // delete the user from user table if rider creation fails
+      await prisma.user.delete({
+        where: {
+          id: user.id,
+        },
+      });
+    } catch (error: unknown) {
+      console.error(
+        "Error rolling back user creation after rider creation failure: ",
+        error,
+      );
+    }
+    throw new AppError(status.INTERNAL_SERVER_ERROR, getError(error));
+  }
+};
 
 export const userService = {
   createAdmin,
+  createRider,
 };

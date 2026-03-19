@@ -15,6 +15,18 @@ const createAdmin = catchAsync(async (req: Request, res: Response) => {
   });
 });
 
+const createRider = catchAsync(async (req: Request, res: Response) => {
+  const result = await userService.createRider(req.body);
+
+  sendResponse(res, {
+    httpStatusCode: status.CREATED,
+    success: true,
+    message: "Rider created successfully",
+    data: result,
+  });
+});
+
 export const userController = {
   createAdmin,
+  createRider,
 };

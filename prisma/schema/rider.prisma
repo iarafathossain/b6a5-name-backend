@@ -6,7 +6,9 @@ model Rider {
     presentAddress   String?
     permanentAddress String?
     age              Int?
-    coverage         String? // Could be linked to an Area/Zone ID later
+
+    hubId String @db.Uuid
+    hub   Hub    @relation("HubRiders", fields: [hubId], references: [id])
 
     // Deliveries handled by this rider
     pickups    Parcel[] @relation("PickupRider")

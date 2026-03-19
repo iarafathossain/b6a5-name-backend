@@ -8,6 +8,8 @@ model Hub {
     managerId String? @db.Uuid
     manager   Admin?  @relation("HubManager", fields: [managerId], references: [id])
 
+    riders Rider[] @relation("HubRiders")
+
     areaId String @db.Uuid
     area   Area   @relation(fields: [areaId], references: [id])
 
