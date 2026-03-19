@@ -1,0 +1,111 @@
+import { IQueryParams } from "../../interfaces/query-type";
+import { prisma } from "../../libs/prisma";
+import { getSlug } from "../../utils/get-slug";
+import { QueryBuilder } from "../../utils/query-builder";
+import { CreateCategoryPayload, UpdateCategoryPayload } from "./validators";
+
+const createCategory = async (payload: CreateCategoryPayload) => {
+  const slug = getSlug(payload.name);
+
+  const category = await prisma.parcelCategory.create({
+    data: {
+      name: payload.name,
+      slug,
+      baseWeight: payload.baseWeight,
+    },
+  });
+
+  return category;
+};
+
+const getAllCategories = async (queryParams: IQueryParams) => {
+  const listQueryParams: IQueryParams = {
+    ...queryParams,
+    sortBy: queryParams.sortBy ?? "name",
+    sortOrder: queryParams.sortOrder ?? "asc",
+  };
+
+  const queryBuilder = new QueryBuilder(
+    prisma.parcelCategory,
+    listQueryParams,
+    {
+      searchableFields: ["name", "slug"],
+      filterableFields: ["name", "slug", "baseWeight"],
+    },
+  )
+    .search()
+    .filter()
+    .sort()
+    .fields()
+    .dynamicInclude(
+      {
+        parcels: true,
+        pricingRules: true,
+      },
+      [],
+    )
+    .paginate();
+
+  return await queryBuilder.execute();
+};
+
+const getCategoryBySlug = async (slug: string, queryParams: IQueryParams) => {
+  const queryBuilder = new QueryBuilder(prisma.parcelCategory, queryParams)
+    .where({ slug })
+    .fields()
+    .dynamicInclude(
+      {
+        parcels: true,
+        pricingRules: true,
+      },
+      [],
+    );
+
+  const categories = await prisma.parcelCategory.findMany(
+    queryBuilder.getQuery() as Parameters<
+      typeof prisma.parcelCategory.findMany
+    >[0],
+  );
+
+  return categories[0] ?? null;
+};
+
+const updateCategory = async (slug: string, payload: UpdateCategoryPayload) => {
+  const updateData: Record<string, unknown> = {};
+
+  if (payload.name) {
+    updateData.name = payload.name;
+    updateData.slug = getSlug(payload.name);
+  }
+
+  if (payload.baseWeight !== undefined) {
+    updateData.baseWeight = payload.baseWeight;
+  }
+
+  const category = await prisma.parcelCategory.update({
+    where: {
+      slug,
+    },
+    data: updateData,
+  });
+
+  return category;
+};
+
+const deleteCategory = async (slug: string) => {
+  const category = await prisma.parcelCategory.delete({
+    where: {
+      slug,
+    },
+  });
+
+  return category;
+};
+
+export const categoryService = {
+  createCategory,
+  getAllCategories,
+  getCategoryBySlug,
+  updateCategory,
+  deleteCategory,
+};

@@ -1,6 +1,6 @@
 model ParcelCategory {
     id         String @id @default(uuid(7)) @db.Uuid
-    name       String // e.g., Document, Electronics, Clothing
+    name       String
     slug       String @unique
     baseWeight Float
 
