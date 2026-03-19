@@ -1,3 +1,5 @@
+import status from "http-status";
+import AppError from "../../errors/app-error";
 import { IQueryParams } from "../../interfaces/query-type";
 import { prisma } from "../../libs/prisma";
 import { getSlug } from "../../utils/get-slug";
@@ -83,6 +85,17 @@ const updateArea = async (slug: string, payload: UpdateAreaPayload) => {
 };
 
 const deleteArea = async (slug: string) => {
+  // validate if area exists before attempting to delete
+  const existingArea = await prisma.area.findUnique({
+    where: {
+      slug,
+    },
+  });
+
+  if (!existingArea) {
+    throw new AppError(status.NOT_FOUND, "Area not found");
+  }
+
   const area = await prisma.area.delete({
     where: {
       slug,

@@ -1,3 +1,5 @@
+import status from "http-status";
+import AppError from "../../errors/app-error";
 import { IQueryParams } from "../../interfaces/query-type";
 import { prisma } from "../../libs/prisma";
 import { getSlug } from "../../utils/get-slug";
@@ -104,6 +106,17 @@ const updateHub = async (slug: string, payload: UpdateHubPayload) => {
 };
 
 const deleteHub = async (slug: string) => {
+  // validate if hub exists before attempting to delete
+  const existingHub = await prisma.hub.findUnique({
+    where: {
+      slug,
+    },
+  });
+
+  if (!existingHub) {
+    throw new AppError(status.NOT_FOUND, "Hub not found");
+  }
+
   const hub = await prisma.hub.delete({
     where: {
       slug,

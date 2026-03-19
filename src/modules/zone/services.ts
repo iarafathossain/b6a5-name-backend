@@ -1,3 +1,5 @@
+import status from "http-status";
+import AppError from "../../errors/app-error";
 import { prisma } from "../../libs/prisma";
 import { getSlug } from "../../utils/get-slug";
 import { CreateZonePayload, UpdateZonePayload } from "./validators";
@@ -54,6 +56,17 @@ const updateZone = async (slug: string, payload: UpdateZonePayload) => {
 };
 
 const deleteZone = async (slug: string) => {
+  // validate if zone exists before attempting to delete
+  const existingZone = await prisma.zone.findUnique({
+    where: {
+      slug,
+    },
+  });
+
+  if (!existingZone) {
+    throw new AppError(status.NOT_FOUND, "Zone not found");
+  }
+
   const zone = await prisma.zone.delete({
     where: {
       slug,

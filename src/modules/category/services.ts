@@ -1,3 +1,5 @@
+import status from "http-status";
+import AppError from "../../errors/app-error";
 import { IQueryParams } from "../../interfaces/query-type";
 import { prisma } from "../../libs/prisma";
 import { getSlug } from "../../utils/get-slug";
@@ -93,6 +95,17 @@ const updateCategory = async (slug: string, payload: UpdateCategoryPayload) => {
 };
 
 const deleteCategory = async (slug: string) => {
+  // validate if category exists before attempting to delete
+  const existingCategory = await prisma.parcelCategory.findUnique({
+    where: {
+      slug,
+    },
+  });
+
+  if (!existingCategory) {
+    throw new AppError(status.NOT_FOUND, "Category not found");
+  }
+
   const category = await prisma.parcelCategory.delete({
     where: {
       slug,

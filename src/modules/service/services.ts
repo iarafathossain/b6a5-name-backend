@@ -1,3 +1,5 @@
+import status from "http-status";
+import AppError from "../../errors/app-error";
 import { IQueryParams } from "../../interfaces/query-type";
 import { prisma } from "../../libs/prisma";
 import { getSlug } from "../../utils/get-slug";
@@ -102,6 +104,17 @@ const updateService = async (slug: string, payload: UpdateServicePayload) => {
 };
 
 const deleteService = async (slug: string) => {
+  // validate if service exists before attempting to delete
+  const existingService = await prisma.service.findUnique({
+    where: {
+      slug,
+    },
+  });
+
+  if (!existingService) {
+    throw new AppError(status.NOT_FOUND, "Service not found");
+  }
+
   const service = await prisma.service.delete({
     where: {
       slug,
