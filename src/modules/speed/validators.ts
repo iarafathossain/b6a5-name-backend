@@ -1,10 +1,10 @@
 import * as zod from "zod";
 
-export const createServiceZodSchema = zod.object({
+export const createSpeedZodSchema = zod.object({
   name: zod
     .string()
-    .min(1, "Service name is required")
-    .min(3, "Service name must be at least 3 characters long"),
+    .min(1, "Speed name is required")
+    .min(3, "Speed name must be at least 3 characters long"),
   description: zod.string().optional().nullable(),
   baseFee: zod
     .number("Base fee must be a number")
@@ -17,12 +17,12 @@ export const createServiceZodSchema = zod.object({
   isActive: zod.boolean("isActive must be a boolean").optional(),
 });
 
-export type CreateServicePayload = zod.infer<typeof createServiceZodSchema>;
+export type CreateSpeedPayload = zod.infer<typeof createSpeedZodSchema>;
 
-export const updateServiceZodSchema = zod.object({
+export const updateSpeedZodSchema = zod.object({
   name: zod
     .string()
-    .min(3, "Service name must be at least 3 characters long")
+    .min(3, "Speed name must be at least 3 characters long")
     .optional(),
   description: zod.string().optional().nullable(),
   baseFee: zod
@@ -37,4 +37,4 @@ export const updateServiceZodSchema = zod.object({
   isActive: zod.boolean("isActive must be a boolean").optional(),
 });
 
-export type UpdateServicePayload = zod.infer<typeof updateServiceZodSchema>;
+export type UpdateSpeedPayload = zod.infer<typeof updateSpeedZodSchema>;

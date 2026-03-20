@@ -9,7 +9,7 @@ import { CreateCategoryPayload, UpdateCategoryPayload } from "./validators";
 const createCategory = async (payload: CreateCategoryPayload) => {
   const slug = getSlug(payload.name);
 
-  const category = await prisma.parcelCategory.create({
+  const category = await prisma.category.create({
     data: {
       name: payload.name,
       slug,
@@ -27,14 +27,10 @@ const getAllCategories = async (queryParams: IQueryParams) => {
     sortOrder: queryParams.sortOrder ?? "asc",
   };
 
-  const queryBuilder = new QueryBuilder(
-    prisma.parcelCategory,
-    listQueryParams,
-    {
-      searchableFields: ["name", "slug"],
-      filterableFields: ["name", "slug", "baseWeight"],
-    },
-  )
+  const queryBuilder = new QueryBuilder(prisma.category, listQueryParams, {
+    searchableFields: ["name", "slug"],
+    filterableFields: ["name", "slug", "baseWeight"],
+  })
     .search()
     .filter()
     .sort()
@@ -52,7 +48,7 @@ const getAllCategories = async (queryParams: IQueryParams) => {
 };
 
 const getCategoryBySlug = async (slug: string, queryParams: IQueryParams) => {
-  const queryBuilder = new QueryBuilder(prisma.parcelCategory, queryParams)
+  const queryBuilder = new QueryBuilder(prisma.category, queryParams)
     .where({ slug })
     .fields()
     .dynamicInclude(
@@ -63,10 +59,8 @@ const getCategoryBySlug = async (slug: string, queryParams: IQueryParams) => {
       [],
     );
 
-  const categories = await prisma.parcelCategory.findMany(
-    queryBuilder.getQuery() as Parameters<
-      typeof prisma.parcelCategory.findMany
-    >[0],
+  const categories = await prisma.category.findMany(
+    queryBuilder.getQuery() as Parameters<typeof prisma.category.findMany>[0],
   );
 
   return categories[0] ?? null;
@@ -84,7 +78,7 @@ const updateCategory = async (slug: string, payload: UpdateCategoryPayload) => {
     updateData.baseWeight = payload.baseWeight;
   }
 
-  const category = await prisma.parcelCategory.update({
+  const category = await prisma.category.update({
     where: {
       slug,
     },
@@ -96,7 +90,7 @@ const updateCategory = async (slug: string, payload: UpdateCategoryPayload) => {
 
 const deleteCategory = async (slug: string) => {
   // validate if category exists before attempting to delete
-  const existingCategory = await prisma.parcelCategory.findUnique({
+  const existingCategory = await prisma.category.findUnique({
     where: {
       slug,
     },
@@ -106,7 +100,7 @@ const deleteCategory = async (slug: string) => {
     throw new AppError(status.NOT_FOUND, "Category not found");
   }
 
-  const category = await prisma.parcelCategory.delete({
+  const category = await prisma.category.delete({
     where: {
       slug,
     },
@@ -115,7 +109,7 @@ const deleteCategory = async (slug: string) => {
   return category;
 };
 
-export const categoryService = {
+export const categoryServices = {
   createCategory,
   getAllCategories,
   getCategoryBySlug,

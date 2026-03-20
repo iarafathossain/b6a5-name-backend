@@ -8,7 +8,7 @@ import {
   UpdatePricingRulePayload,
 } from "./validators";
 
-const createPricingRule = async (payload: CreatePricingRulePayload) => {
+const createPricing = async (payload: CreatePricingRulePayload) => {
   // Validate that min weight is less than max weight
   if (payload.minWeight >= payload.maxWeight) {
     throw new AppError(
@@ -34,18 +34,18 @@ const createPricingRule = async (payload: CreatePricingRulePayload) => {
     throw new AppError(status.NOT_FOUND, "Destination zone not found");
   }
 
-  // Validate that service exists
-  const service = await prisma.service.findUnique({
-    where: { id: payload.serviceId },
+  // Validate that speed exists
+  const speed = await prisma.speed.findUnique({
+    where: { id: payload.speedId },
   });
 
-  if (!service) {
-    throw new AppError(status.NOT_FOUND, "Service not found");
+  if (!speed) {
+    throw new AppError(status.NOT_FOUND, "Speed type not found");
   }
 
   // prevent express delivery for outside dhaka
   if (
-    service.slug === "express-delivery" &&
+    speed.slug === "express-delivery" &&
     destinationZone.slug === "outside-dhaka"
   ) {
     throw new AppError(
@@ -55,7 +55,7 @@ const createPricingRule = async (payload: CreatePricingRulePayload) => {
   }
 
   // Validate that category exists
-  const category = await prisma.parcelCategory.findUnique({
+  const category = await prisma.category.findUnique({
     where: { id: payload.categoryId },
   });
 
@@ -72,19 +72,20 @@ const createPricingRule = async (payload: CreatePricingRulePayload) => {
   }
 
   // ensure price is >= service base fee
-  if (payload.price < Number(service.baseFee)) {
+  if (payload.price < Number(speed.baseFee)) {
     throw new AppError(
       status.BAD_REQUEST,
-      `Price must be greater than or equal to service base fee of ${service.baseFee}`,
+      `Price must be greater than or equal to speed base fee of ${speed.baseFee}`,
     );
   }
 
-  const pricingRule = await prisma.pricingRule.create({
+  const pricing = await prisma.pricing.create({
     data: {
       originalZoneId: payload.originalZoneId,
       destinationZoneId: payload.destinationZoneId,
       categoryId: payload.categoryId,
-      serviceId: payload.serviceId,
+      speedId: payload.speedId,
+      methodId: payload.methodId,
       minWeight: payload.minWeight,
       maxWeight: payload.maxWeight,
       price: payload.price,
@@ -93,32 +94,32 @@ const createPricingRule = async (payload: CreatePricingRulePayload) => {
       originalZone: true,
       destinationZone: true,
       category: true,
-      service: true,
+      speed: true,
     },
   });
 
-  return pricingRule;
+  return pricing;
 };
 
-const getAllPricingRules = async (queryParams: IQueryParams) => {
+const getAllPricing = async (queryParams: IQueryParams) => {
   const listQueryParams: IQueryParams = {
     ...queryParams,
     sortBy: queryParams.sortBy ?? "createdAt",
     sortOrder: queryParams.sortOrder ?? "desc",
   };
 
-  const queryBuilder = new QueryBuilder(prisma.pricingRule, listQueryParams, {
+  const queryBuilder = new QueryBuilder(prisma.pricing, listQueryParams, {
     searchableFields: [
       "originalZone.name",
       "destinationZone.name",
-      "service.name",
+      "speed.name",
       "category.name",
     ],
     filterableFields: [
       "originalZoneId",
       "destinationZoneId",
       "categoryId",
-      "serviceId",
+      "speedId",
       "minWeight",
       "maxWeight",
       "price",
@@ -133,17 +134,17 @@ const getAllPricingRules = async (queryParams: IQueryParams) => {
         originalZone: true,
         destinationZone: true,
         category: true,
-        service: true,
+        speed: true,
       },
-      ["originalZone", "destinationZone", "service", "category"],
+      ["originalZone", "destinationZone", "speed", "category"],
     )
     .paginate();
 
   return await queryBuilder.execute();
 };
 
-const getPricingRuleById = async (id: string, queryParams: IQueryParams) => {
-  const queryBuilder = new QueryBuilder(prisma.pricingRule, queryParams)
+const getPricingById = async (id: string, queryParams: IQueryParams) => {
+  const queryBuilder = new QueryBuilder(prisma.pricing, queryParams)
     .where({ id })
     .fields()
     .dynamicInclude(
@@ -151,30 +152,26 @@ const getPricingRuleById = async (id: string, queryParams: IQueryParams) => {
         originalZone: true,
         destinationZone: true,
         category: true,
-        service: true,
+        speed: true,
+        method: true,
       },
-      ["originalZone", "destinationZone", "service", "category"],
+      ["originalZone", "destinationZone", "speed", "category", "method"],
     );
 
-  const pricingRules = await prisma.pricingRule.findMany(
-    queryBuilder.getQuery() as Parameters<
-      typeof prisma.pricingRule.findMany
-    >[0],
+  const pricingRules = await prisma.pricing.findMany(
+    queryBuilder.getQuery() as Parameters<typeof prisma.pricing.findMany>[0],
   );
 
   return pricingRules[0] ?? null;
 };
 
-const updatePricingRule = async (
-  id: string,
-  payload: UpdatePricingRulePayload,
-) => {
+const updatePricing = async (id: string, payload: UpdatePricingRulePayload) => {
   const updateData: Record<string, unknown> = {};
 
-  const existingPricingRule = await prisma.pricingRule.findUnique({
+  const existingPricingRule = await prisma.pricing.findUnique({
     where: { id },
     include: {
-      service: true,
+      speed: true,
       category: true,
     },
   });
@@ -212,10 +209,10 @@ const updatePricingRule = async (
 
   if (payload.price !== undefined) {
     // ensure price is >= service base fee
-    if (payload.price < Number(existingPricingRule.service.baseFee)) {
+    if (payload.price < Number(existingPricingRule.speed.baseFee)) {
       throw new AppError(
         status.BAD_REQUEST,
-        `Price must be greater than or equal to service base fee of ${existingPricingRule.service.baseFee}`,
+        `Price must be greater than or equal to speed base fee of ${existingPricingRule.speed.baseFee}`,
       );
     }
     updateData.price = payload.price;
@@ -245,21 +242,21 @@ const updatePricingRule = async (
     updateData.destinationZoneId = payload.destinationZoneId;
   }
 
-  if (payload.serviceId) {
-    const service = await prisma.service.findUnique({
-      where: { id: payload.serviceId },
+  if (payload.speedId) {
+    const speed = await prisma.speed.findUnique({
+      where: { id: payload.speedId },
     });
 
-    if (!service) {
-      throw new AppError(status.NOT_FOUND, "Service not found");
+    if (!speed) {
+      throw new AppError(status.NOT_FOUND, "Speed not found");
     }
 
-    updateData.serviceId = payload.serviceId;
+    updateData.speedId = payload.speedId;
   }
 
   if (payload.categoryId !== undefined) {
     if (payload.categoryId) {
-      const category = await prisma.parcelCategory.findUnique({
+      const category = await prisma.category.findUnique({
         where: { id: payload.categoryId },
       });
 
@@ -271,23 +268,38 @@ const updatePricingRule = async (
     updateData.categoryId = payload.categoryId;
   }
 
-  const pricingRule = await prisma.pricingRule.update({
+  if (payload.methodId !== undefined) {
+    if (payload.methodId) {
+      const method = await prisma.method.findUnique({
+        where: { id: payload.methodId },
+      });
+
+      if (!method) {
+        throw new AppError(status.NOT_FOUND, "Method not found");
+      }
+    }
+
+    updateData.methodId = payload.methodId;
+  }
+
+  const pricingRule = await prisma.pricing.update({
     where: { id },
     data: updateData,
     include: {
       originalZone: true,
       destinationZone: true,
       category: true,
-      service: true,
+      speed: true,
+      method: true,
     },
   });
 
   return pricingRule;
 };
 
-const deletePricingRule = async (id: string) => {
+const deletePricing = async (id: string) => {
   // Validate if pricing rule exists before attempting to delete
-  const existingPricingRule = await prisma.pricingRule.findUnique({
+  const existingPricingRule = await prisma.pricing.findUnique({
     where: { id },
   });
 
@@ -295,17 +307,17 @@ const deletePricingRule = async (id: string) => {
     throw new AppError(status.NOT_FOUND, "Pricing rule not found");
   }
 
-  const pricingRule = await prisma.pricingRule.delete({
+  const pricingRule = await prisma.pricing.delete({
     where: { id },
   });
 
   return pricingRule;
 };
 
-export const pricingService = {
-  createPricingRule,
-  getAllPricingRules,
-  getPricingRuleById,
-  updatePricingRule,
-  deletePricingRule,
+export const pricingServices = {
+  createPricing,
+  getAllPricing,
+  getPricingById,
+  updatePricing,
+  deletePricing,
 };

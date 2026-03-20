@@ -1,38 +1,38 @@
 import { Router } from "express";
 import { checkAuth } from "../../middlewares/check-auth";
 import { validateRequest } from "../../middlewares/validate-request";
-import { serviceControllers } from "./controllers";
-import { createServiceZodSchema, updateServiceZodSchema } from "./validators";
+import { speedControllers } from "./controllers";
+import { createSpeedZodSchema, updateSpeedZodSchema } from "./validators";
 
 const router = Router();
 
-// POST: /api/v1/services/ - Create a new service (Admin & Super Admin)
+// POST: /api/v1/speeds/ - Create a new speed (Admin & Super Admin)
 router.post(
   "/",
-  validateRequest(createServiceZodSchema),
+  validateRequest(createSpeedZodSchema),
   checkAuth("ADMIN", "SUPER_ADMIN"),
-  serviceControllers.createService,
+  speedControllers.createSpeed,
 );
 
-// GET: /api/v1/services/ - Get all services (Public)
-router.get("/", serviceControllers.getAllServices);
+// GET: /api/v1/speeds/ - Get all speeds (Public)
+router.get("/", speedControllers.getAllSpeeds);
 
-// GET: /api/v1/services/:slug - Get service by slug (Public)
-router.get("/:slug", serviceControllers.getServiceBySlug);
+// GET: /api/v1/speeds/:slug - Get speed by slug (Public)
+router.get("/:slug", speedControllers.getSpeedBySlug);
 
-// PATCH: /api/v1/services/:slug - Update service by slug (Admin & Super Admin)
+// PATCH: /api/v1/speeds/:slug - Update speed by slug (Admin & Super Admin)
 router.patch(
   "/:slug",
-  validateRequest(updateServiceZodSchema),
+  validateRequest(updateSpeedZodSchema),
   checkAuth("ADMIN", "SUPER_ADMIN"),
-  serviceControllers.updateService,
+  speedControllers.updateSpeed,
 );
 
-// DELETE: /api/v1/services/:slug - Delete service by slug (Admin & Super Admin)
+// DELETE: /api/v1/speeds/:slug - Delete speed by slug (Admin & Super Admin)
 router.delete(
   "/:slug",
   checkAuth("ADMIN", "SUPER_ADMIN"),
-  serviceControllers.deleteService,
+  speedControllers.deleteSpeed,
 );
 
 export const speedRoutes = router;

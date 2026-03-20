@@ -5,7 +5,8 @@ export const createPricingRuleZodSchema = zod
     originalZoneId: zod.uuid("Original zone ID must be a valid UUID"),
     destinationZoneId: zod.uuid("Destination zone ID must be a valid UUID"),
     categoryId: zod.uuid("Category ID must be a valid UUID"),
-    serviceId: zod.uuid("Service ID must be a valid UUID"),
+    speedId: zod.uuid("Speed ID must be a valid UUID"),
+    methodId: zod.uuid("Method ID must be a valid UUID"),
     minWeight: zod
       .number("Min weight must be a number")
       .positive("Min weight must be greater than 0"),
@@ -37,7 +38,8 @@ export const updatePricingRuleZodSchema = zod
       .uuid("Category ID must be a valid UUID")
       .optional()
       .nullable(),
-    serviceId: zod.uuid("Service ID must be a valid UUID").optional(),
+    speedId: zod.uuid("Speed ID must be a valid UUID").optional(),
+    methodId: zod.uuid("Method ID must be a valid UUID").optional(),
     minWeight: zod
       .number("Min weight must be a number")
       .positive("Min weight must be greater than 0")

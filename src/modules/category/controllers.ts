@@ -4,12 +4,12 @@ import AppError from "../../errors/app-error";
 import { IQueryParams } from "../../interfaces/query-type";
 import { catchAsync } from "../../shared/catch-async";
 import { sendResponse } from "../../shared/send-response";
-import { categoryService } from "./services";
+import { categoryServices } from "./services";
 
 const createCategory = catchAsync(async (req: Request, res: Response) => {
   const payload = req.body;
 
-  const result = await categoryService.createCategory(payload);
+  const result = await categoryServices.createCategory(payload);
 
   sendResponse(res, {
     httpStatusCode: status.CREATED,
@@ -21,7 +21,7 @@ const createCategory = catchAsync(async (req: Request, res: Response) => {
 
 const getAllCategories = catchAsync(async (req: Request, res: Response) => {
   const queryParams = req.query as IQueryParams;
-  const result = await categoryService.getAllCategories(queryParams);
+  const result = await categoryServices.getAllCategories(queryParams);
 
   sendResponse(res, {
     httpStatusCode: status.OK,
@@ -44,7 +44,7 @@ const getCategoryBySlug = catchAsync(async (req: Request, res: Response) => {
   }
 
   const queryParams = req.query as IQueryParams;
-  const result = await categoryService.getCategoryBySlug(slug, queryParams);
+  const result = await categoryServices.getCategoryBySlug(slug, queryParams);
 
   sendResponse(res, {
     httpStatusCode: status.OK,
@@ -67,7 +67,7 @@ const updateCategory = catchAsync(async (req: Request, res: Response) => {
 
   const payload = req.body;
 
-  const result = await categoryService.updateCategory(slug, payload);
+  const result = await categoryServices.updateCategory(slug, payload);
 
   sendResponse(res, {
     httpStatusCode: status.OK,
@@ -88,7 +88,7 @@ const deleteCategory = catchAsync(async (req: Request, res: Response) => {
     throw new AppError(status.BAD_REQUEST, "Slug parameter must be a string");
   }
 
-  const result = await categoryService.deleteCategory(slug);
+  const result = await categoryServices.deleteCategory(slug);
 
   sendResponse(res, {
     httpStatusCode: status.OK,

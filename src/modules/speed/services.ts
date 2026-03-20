@@ -4,12 +4,12 @@ import { IQueryParams } from "../../interfaces/query-type";
 import { prisma } from "../../libs/prisma";
 import { getSlug } from "../../utils/get-slug";
 import { QueryBuilder } from "../../utils/query-builder";
-import { CreateServicePayload, UpdateServicePayload } from "./validators";
+import { CreateSpeedPayload, UpdateSpeedPayload } from "./validators";
 
-const createService = async (payload: CreateServicePayload) => {
+const createSpeed = async (payload: CreateSpeedPayload) => {
   const slug = getSlug(payload.name);
 
-  const service = await prisma.service.create({
+  const speed = await prisma.speed.create({
     data: {
       name: payload.name,
       slug,
@@ -20,17 +20,17 @@ const createService = async (payload: CreateServicePayload) => {
     },
   });
 
-  return service;
+  return speed;
 };
 
-const getAllServices = async (queryParams: IQueryParams) => {
+const getAllSpeeds = async (queryParams: IQueryParams) => {
   const listQueryParams: IQueryParams = {
     ...queryParams,
     sortBy: queryParams.sortBy ?? "name",
     sortOrder: queryParams.sortOrder ?? "asc",
   };
 
-  const queryBuilder = new QueryBuilder(prisma.service, listQueryParams, {
+  const queryBuilder = new QueryBuilder(prisma.speed, listQueryParams, {
     searchableFields: ["name", "slug", "description"],
     filterableFields: ["name", "slug", "slaHours", "baseFee", "isActive"],
   })
@@ -50,8 +50,8 @@ const getAllServices = async (queryParams: IQueryParams) => {
   return await queryBuilder.execute();
 };
 
-const getServiceBySlug = async (slug: string, queryParams: IQueryParams) => {
-  const queryBuilder = new QueryBuilder(prisma.service, queryParams)
+const getSpeedBySlug = async (slug: string, queryParams: IQueryParams) => {
+  const queryBuilder = new QueryBuilder(prisma.speed, queryParams)
     .where({ slug })
     .fields()
     .dynamicInclude(
@@ -62,14 +62,14 @@ const getServiceBySlug = async (slug: string, queryParams: IQueryParams) => {
       [],
     );
 
-  const services = await prisma.service.findMany(
-    queryBuilder.getQuery() as Parameters<typeof prisma.service.findMany>[0],
+  const speeds = await prisma.speed.findMany(
+    queryBuilder.getQuery() as Parameters<typeof prisma.speed.findMany>[0],
   );
 
-  return services[0] ?? null;
+  return speeds[0] ?? null;
 };
 
-const updateService = async (slug: string, payload: UpdateServicePayload) => {
+const updateSpeed = async (slug: string, payload: UpdateSpeedPayload) => {
   const updateData: Record<string, unknown> = {};
 
   if (payload.name) {
@@ -93,41 +93,41 @@ const updateService = async (slug: string, payload: UpdateServicePayload) => {
     updateData.isActive = payload.isActive;
   }
 
-  const service = await prisma.service.update({
+  const speed = await prisma.speed.update({
     where: {
       slug,
     },
     data: updateData,
   });
 
-  return service;
+  return speed;
 };
 
-const deleteService = async (slug: string) => {
-  // validate if service exists before attempting to delete
-  const existingService = await prisma.service.findUnique({
+const deleteSpeed = async (slug: string) => {
+  // validate if speed exists before attempting to delete
+  const existingSpeed = await prisma.speed.findUnique({
     where: {
       slug,
     },
   });
 
-  if (!existingService) {
-    throw new AppError(status.NOT_FOUND, "Service not found");
+  if (!existingSpeed) {
+    throw new AppError(status.NOT_FOUND, "Speed not found");
   }
 
-  const service = await prisma.service.delete({
+  const speed = await prisma.speed.delete({
     where: {
       slug,
     },
   });
 
-  return service;
+  return speed;
 };
 
-export const serviceService = {
-  createService,
-  getAllServices,
-  getServiceBySlug,
-  updateService,
-  deleteService,
+export const speedServices = {
+  createSpeed,
+  getAllSpeeds,
+  getSpeedBySlug,
+  updateSpeed,
+  deleteSpeed,
 };

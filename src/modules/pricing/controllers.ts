@@ -4,12 +4,12 @@ import AppError from "../../errors/app-error";
 import { IQueryParams } from "../../interfaces/query-type";
 import { catchAsync } from "../../shared/catch-async";
 import { sendResponse } from "../../shared/send-response";
-import { pricingService } from "./services";
+import { pricingServices } from "./services";
 
 const createPricingRule = catchAsync(async (req: Request, res: Response) => {
   const payload = req.body;
 
-  const result = await pricingService.createPricingRule(payload);
+  const result = await pricingServices.createPricing(payload);
 
   sendResponse(res, {
     httpStatusCode: status.CREATED,
@@ -21,7 +21,7 @@ const createPricingRule = catchAsync(async (req: Request, res: Response) => {
 
 const getAllPricingRules = catchAsync(async (req: Request, res: Response) => {
   const queryParams = req.query as IQueryParams;
-  const result = await pricingService.getAllPricingRules(queryParams);
+  const result = await pricingServices.getAllPricing(queryParams);
 
   sendResponse(res, {
     httpStatusCode: status.OK,
@@ -50,7 +50,7 @@ const getPricingRuleById = catchAsync(async (req: Request, res: Response) => {
   }
 
   const queryParams = req.query as IQueryParams;
-  const result = await pricingService.getPricingRuleById(id, queryParams);
+  const result = await pricingServices.getPricingById(id, queryParams);
 
   sendResponse(res, {
     httpStatusCode: status.OK,
@@ -79,7 +79,7 @@ const updatePricingRule = catchAsync(async (req: Request, res: Response) => {
 
   const payload = req.body;
 
-  const result = await pricingService.updatePricingRule(id, payload);
+  const result = await pricingServices.updatePricing(id, payload);
 
   sendResponse(res, {
     httpStatusCode: status.OK,
@@ -106,7 +106,7 @@ const deletePricingRule = catchAsync(async (req: Request, res: Response) => {
     );
   }
 
-  const result = await pricingService.deletePricingRule(id);
+  const result = await pricingServices.deletePricing(id);
 
   sendResponse(res, {
     httpStatusCode: status.OK,

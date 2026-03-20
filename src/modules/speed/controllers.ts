@@ -4,35 +4,35 @@ import AppError from "../../errors/app-error";
 import { IQueryParams } from "../../interfaces/query-type";
 import { catchAsync } from "../../shared/catch-async";
 import { sendResponse } from "../../shared/send-response";
-import { serviceService } from "./services";
+import { speedServices } from "./services";
 
-const createService = catchAsync(async (req: Request, res: Response) => {
+const createSpeed = catchAsync(async (req: Request, res: Response) => {
   const payload = req.body;
 
-  const result = await serviceService.createService(payload);
+  const result = await speedServices.createSpeed(payload);
 
   sendResponse(res, {
     httpStatusCode: status.CREATED,
     success: true,
-    message: "Service created successfully",
+    message: "Speed created successfully",
     data: result,
   });
 });
 
-const getAllServices = catchAsync(async (req: Request, res: Response) => {
+const getAllSpeeds = catchAsync(async (req: Request, res: Response) => {
   const queryParams = req.query as IQueryParams;
-  const result = await serviceService.getAllServices(queryParams);
+  const result = await speedServices.getAllSpeeds(queryParams);
 
   sendResponse(res, {
     httpStatusCode: status.OK,
     success: true,
-    message: "Services retrieved successfully",
+    message: "Speeds retrieved successfully",
     data: result.data ?? [],
     meta: result.meta,
   });
 });
 
-const getServiceBySlug = catchAsync(async (req: Request, res: Response) => {
+const getSpeedBySlug = catchAsync(async (req: Request, res: Response) => {
   const { slug } = req.params;
 
   if (!slug) {
@@ -44,17 +44,17 @@ const getServiceBySlug = catchAsync(async (req: Request, res: Response) => {
   }
 
   const queryParams = req.query as IQueryParams;
-  const result = await serviceService.getServiceBySlug(slug, queryParams);
+  const result = await speedServices.getSpeedBySlug(slug, queryParams);
 
   sendResponse(res, {
     httpStatusCode: status.OK,
     success: true,
-    message: "Service retrieved successfully",
+    message: "Speed retrieved successfully",
     data: result,
   });
 });
 
-const updateService = catchAsync(async (req: Request, res: Response) => {
+const updateSpeed = catchAsync(async (req: Request, res: Response) => {
   const { slug } = req.params;
 
   if (!slug) {
@@ -67,17 +67,17 @@ const updateService = catchAsync(async (req: Request, res: Response) => {
 
   const payload = req.body;
 
-  const result = await serviceService.updateService(slug, payload);
+  const result = await speedServices.updateSpeed(slug, payload);
 
   sendResponse(res, {
     httpStatusCode: status.OK,
     success: true,
-    message: "Service updated successfully",
+    message: "Speed updated successfully",
     data: result,
   });
 });
 
-const deleteService = catchAsync(async (req: Request, res: Response) => {
+const deleteSpeed = catchAsync(async (req: Request, res: Response) => {
   const { slug } = req.params;
 
   if (!slug) {
@@ -88,20 +88,20 @@ const deleteService = catchAsync(async (req: Request, res: Response) => {
     throw new AppError(status.BAD_REQUEST, "Slug parameter must be a string");
   }
 
-  const result = await serviceService.deleteService(slug);
+  const result = await speedServices.deleteSpeed(slug);
 
   sendResponse(res, {
     httpStatusCode: status.OK,
     success: true,
-    message: "Service deleted successfully",
+    message: "Speed deleted successfully",
     data: result,
   });
 });
 
-export const serviceControllers = {
-  createService,
-  getAllServices,
-  getServiceBySlug,
-  updateService,
-  deleteService,
+export const speedControllers = {
+  createSpeed,
+  getAllSpeeds,
+  getSpeedBySlug,
+  updateSpeed,
+  deleteSpeed,
 };
