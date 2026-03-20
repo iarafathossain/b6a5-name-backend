@@ -3,6 +3,7 @@ import { areaRoutes } from "../modules/area/routes";
 import { authRoutes } from "../modules/auth/routes";
 import { categoryRoutes } from "../modules/category/routes";
 import { hubRoutes } from "../modules/hub/routes";
+import { pricingRoutes } from "../modules/pricing/routes";
 import { serviceRoutes } from "../modules/service/routes";
 import { userRoutes } from "../modules/user/routes";
 import { zoneRoutes } from "../modules/zone/routes";
@@ -25,6 +26,9 @@ router.use("/hubs", hubRoutes);
 
 // using service routes
 router.use("/services", serviceRoutes);
+
+// using pricing routes
+router.use("/pricing-rules", pricingRoutes);
 
 // using zone routes
 router.use("/zones", zoneRoutes);

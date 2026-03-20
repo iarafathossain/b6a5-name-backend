@@ -7,8 +7,8 @@ model PricingRule {
     destinationZoneId String @db.Uuid
     destinationZone   Zone   @relation("DestinationZone", fields: [destinationZoneId], references: [id])
 
-    categoryId String?         @db.Uuid
-    category   ParcelCategory? @relation(fields: [categoryId], references: [id])
+    categoryId String         @db.Uuid
+    category   ParcelCategory @relation(fields: [categoryId], references: [id])
 
     serviceId String  @db.Uuid
     service   Service @relation(fields: [serviceId], references: [id])
