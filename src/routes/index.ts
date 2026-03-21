@@ -3,6 +3,7 @@ import { areaRoutes } from "../modules/area/routes";
 import { authRoutes } from "../modules/auth/routes";
 import { categoryRoutes } from "../modules/category/routes";
 import { hubRoutes } from "../modules/hub/routes";
+import { methodRoutes } from "../modules/method/routes";
 import { pricingRoutes } from "../modules/pricing/routes";
 import { speedRoutes } from "../modules/speed/routes";
 import { userRoutes } from "../modules/user/routes";
@@ -26,6 +27,9 @@ router.use("/hubs", hubRoutes);
 
 // using speed routes
 router.use("/speeds", speedRoutes);
+
+// using method routes
+router.use("/methods", methodRoutes);
 
 // using pricing routes
 router.use("/pricing", pricingRoutes);
