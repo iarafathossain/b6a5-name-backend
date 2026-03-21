@@ -4,6 +4,8 @@ model Merchant {
     user          User   @relation(fields: [userId], references: [id], onDelete: Cascade)
     businessName  String @db.Text
     pickupAddress String @db.Text
+    originAreaId  String @db.Uuid
+    originArea    Area   @relation("MerchantOriginArea", fields: [originAreaId], references: [id])
     averageRating Float  @default(0.0)
 
     parcels Parcel[]

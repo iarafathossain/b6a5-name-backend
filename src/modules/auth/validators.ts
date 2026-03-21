@@ -33,6 +33,7 @@ export const registerMerchantZodSchema = zod
       .string()
       .min(1, "Pickup address is required")
       .max(200, "Pickup address must be at most 200 characters long"),
+    originAreaId: zod.string().uuid("Invalid Origin Area ID"),
   })
   .refine((data) => data.password === data.confirmPassword, {
     message: "Confirm password must match password",

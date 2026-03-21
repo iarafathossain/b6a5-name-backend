@@ -6,8 +6,9 @@ model Area {
     zone   Zone   @relation(fields: [zoneId], references: [id])
 
     hubs               Hub[]
-    originParcels      Parcel[] @relation("ParcelOriginArea")
-    destinationParcels Parcel[] @relation("ParcelDestinationArea")
+    originParcels      Parcel[]   @relation("ParcelOriginArea")
+    destinationParcels Parcel[]   @relation("ParcelDestinationArea")
+    merchants          Merchant[] @relation("MerchantOriginArea")
 
     createdAt DateTime @default(now())
     updatedAt DateTime @updatedAt

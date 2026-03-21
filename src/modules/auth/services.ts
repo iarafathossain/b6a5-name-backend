@@ -56,8 +56,15 @@ const checkUser = async (email: string) => {
 };
 
 const registerMerchant = async (payload: RegisterMerchantZodSchema) => {
-  const { email, password, contactNumber, name, businessName, pickupAddress } =
-    payload;
+  const {
+    email,
+    password,
+    contactNumber,
+    name,
+    businessName,
+    pickupAddress,
+    originAreaId,
+  } = payload;
 
   // step 1: check if email already exists
   const existingUser = await prisma.user.findUnique({
@@ -91,6 +98,7 @@ const registerMerchant = async (payload: RegisterMerchantZodSchema) => {
         userId: user.id,
         businessName,
         pickupAddress,
+        originAreaId,
       },
     });
 
