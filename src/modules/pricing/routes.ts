@@ -2,40 +2,37 @@ import { Router } from "express";
 import { checkAuth } from "../../middlewares/check-auth";
 import { validateRequest } from "../../middlewares/validate-request";
 import { pricingControllers } from "./controllers";
-import {
-  createPricingRuleZodSchema,
-  updatePricingRuleZodSchema,
-} from "./validators";
+import { createPricingZodSchema, updatePricingZodSchema } from "./validators";
 
 const router = Router();
 
 // POST: /api/v1/pricing/ - Create a new pricing rule (Admin & Super Admin)
 router.post(
   "/",
-  validateRequest(createPricingRuleZodSchema),
+  validateRequest(createPricingZodSchema),
   checkAuth("ADMIN", "SUPER_ADMIN"),
-  pricingControllers.createPricingRule,
+  pricingControllers.createPricing,
 );
 
 // GET: /api/v1/pricing/ - Get all pricing rules (Public)
-router.get("/", pricingControllers.getAllPricingRules);
+router.get("/", pricingControllers.getAllPricing);
 
 // GET: /api/v1/pricing/:id - Get pricing rule by ID (Public)
-router.get("/:id", pricingControllers.getPricingRuleById);
+router.get("/:id", pricingControllers.getPricingById);
 
 // PATCH: /api/v1/pricing/:id - Update pricing rule by ID (Admin & Super Admin)
 router.patch(
   "/:id",
-  validateRequest(updatePricingRuleZodSchema),
+  validateRequest(updatePricingZodSchema),
   checkAuth("ADMIN", "SUPER_ADMIN"),
-  pricingControllers.updatePricingRule,
+  pricingControllers.updatePricing,
 );
 
 // DELETE: /api/v1/pricing/:id - Delete pricing rule by ID (Admin & Super Admin)
 router.delete(
   "/:id",
   checkAuth("ADMIN", "SUPER_ADMIN"),
-  pricingControllers.deletePricingRule,
+  pricingControllers.deletePricing,
 );
 
 export const pricingRoutes = router;

@@ -6,7 +6,7 @@ import { catchAsync } from "../../shared/catch-async";
 import { sendResponse } from "../../shared/send-response";
 import { pricingServices } from "./services";
 
-const createPricingRule = catchAsync(async (req: Request, res: Response) => {
+const createPricing = catchAsync(async (req: Request, res: Response) => {
   const payload = req.body;
 
   const result = await pricingServices.createPricing(payload);
@@ -19,7 +19,7 @@ const createPricingRule = catchAsync(async (req: Request, res: Response) => {
   });
 });
 
-const getAllPricingRules = catchAsync(async (req: Request, res: Response) => {
+const getAllPricing = catchAsync(async (req: Request, res: Response) => {
   const queryParams = req.query as IQueryParams;
   const result = await pricingServices.getAllPricing(queryParams);
 
@@ -32,7 +32,7 @@ const getAllPricingRules = catchAsync(async (req: Request, res: Response) => {
   });
 });
 
-const getPricingRuleById = catchAsync(async (req: Request, res: Response) => {
+const getPricingById = catchAsync(async (req: Request, res: Response) => {
   const { id } = req.params;
 
   if (!id) {
@@ -60,7 +60,7 @@ const getPricingRuleById = catchAsync(async (req: Request, res: Response) => {
   });
 });
 
-const updatePricingRule = catchAsync(async (req: Request, res: Response) => {
+const updatePricing = catchAsync(async (req: Request, res: Response) => {
   const { id } = req.params;
 
   if (!id) {
@@ -89,7 +89,7 @@ const updatePricingRule = catchAsync(async (req: Request, res: Response) => {
   });
 });
 
-const deletePricingRule = catchAsync(async (req: Request, res: Response) => {
+const deletePricing = catchAsync(async (req: Request, res: Response) => {
   const { id } = req.params;
 
   if (!id) {
@@ -117,9 +117,9 @@ const deletePricingRule = catchAsync(async (req: Request, res: Response) => {
 });
 
 export const pricingControllers = {
-  createPricingRule,
-  getAllPricingRules,
-  getPricingRuleById,
-  updatePricingRule,
-  deletePricingRule,
+  createPricing,
+  getAllPricing,
+  getPricingById,
+  updatePricing,
+  deletePricing,
 };

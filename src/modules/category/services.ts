@@ -14,6 +14,7 @@ const createCategory = async (payload: CreateCategoryPayload) => {
       name: payload.name,
       slug,
       baseWeight: payload.baseWeight,
+      baseFee: payload.baseFee ?? undefined,
     },
   });
 
@@ -76,6 +77,10 @@ const updateCategory = async (slug: string, payload: UpdateCategoryPayload) => {
 
   if (payload.baseWeight !== undefined) {
     updateData.baseWeight = payload.baseWeight;
+  }
+
+  if (payload.baseFee !== undefined) {
+    updateData.baseFee = payload.baseFee;
   }
 
   const category = await prisma.category.update({

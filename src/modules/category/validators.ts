@@ -8,6 +8,10 @@ export const createCategoryZodSchema = zod.object({
   baseWeight: zod
     .number("Base weight must be a number")
     .positive("Base weight must be greater than 0"),
+  baseFee: zod
+    .number("Base fee must be a number")
+    .nonnegative("Base fee must be greater than or equal to 0")
+    .optional(),
 });
 
 export type CreateCategoryPayload = zod.infer<typeof createCategoryZodSchema>;
@@ -20,6 +24,10 @@ export const updateCategoryZodSchema = zod.object({
   baseWeight: zod
     .number("Base weight must be a number")
     .positive("Base weight must be greater than 0")
+    .optional(),
+  baseFee: zod
+    .number("Base fee must be a number")
+    .nonnegative("Base fee must be greater than or equal to 0")
     .optional(),
 });
 

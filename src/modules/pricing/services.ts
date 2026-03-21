@@ -43,6 +43,31 @@ const createPricing = async (payload: CreatePricingRulePayload) => {
     throw new AppError(status.NOT_FOUND, "Speed type not found");
   }
 
+  // ensure price is >= speed base fee
+  if (payload.price < Number(speed.baseFee)) {
+    throw new AppError(
+      status.BAD_REQUEST,
+      `Price must be greater than or equal to speed[${speed.slug}] base fee of ${speed.baseFee}`,
+    );
+  }
+
+  // Validate that method exists
+  const method = await prisma.method.findUnique({
+    where: { id: payload.methodId },
+  });
+
+  if (!method) {
+    throw new AppError(status.NOT_FOUND, "Delivery method not found");
+  }
+
+  // ensure price is >= method base fee
+  if (payload.price < Number(method.baseFee)) {
+    throw new AppError(
+      status.BAD_REQUEST,
+      `Price must be greater than or equal to method[${method.slug}] base fee of ${method.baseFee}`,
+    );
+  }
+
   // prevent express delivery for outside dhaka
   if (
     speed.slug === "express-delivery" &&
@@ -63,6 +88,14 @@ const createPricing = async (payload: CreatePricingRulePayload) => {
     throw new AppError(status.NOT_FOUND, "Category not found");
   }
 
+  // ensure price is >= category base fee
+  if (payload.price < Number(category.baseFee)) {
+    throw new AppError(
+      status.BAD_REQUEST,
+      `Price must be greater than or equal to category base fee of ${category.baseFee}`,
+    );
+  }
+
   // ensure minWeight is >= category base weight
   if (payload.minWeight < category.baseWeight) {
     throw new AppError(
@@ -75,7 +108,25 @@ const createPricing = async (payload: CreatePricingRulePayload) => {
   if (payload.price < Number(speed.baseFee)) {
     throw new AppError(
       status.BAD_REQUEST,
-      `Price must be greater than or equal to speed base fee of ${speed.baseFee}`,
+      `Price must be greater than or equal to speed[${speed.slug}] base fee of ${speed.baseFee}`,
+    );
+  }
+
+  // prevent duplicate pricing rules for the same zone, category, speed, and method combination
+  const duplicateCheck = await prisma.pricing.findFirst({
+    where: {
+      originalZoneId: payload.originalZoneId,
+      destinationZoneId: payload.destinationZoneId,
+      categoryId: payload.categoryId,
+      speedId: payload.speedId,
+      methodId: payload.methodId,
+    },
+  });
+
+  if (duplicateCheck) {
+    throw new AppError(
+      status.BAD_REQUEST,
+      "A pricing rule with the same zone, category, speed, and method combination already exists",
     );
   }
 
@@ -95,6 +146,7 @@ const createPricing = async (payload: CreatePricingRulePayload) => {
       destinationZone: true,
       category: true,
       speed: true,
+      method: true,
     },
   });
 
@@ -123,6 +175,7 @@ const getAllPricing = async (queryParams: IQueryParams) => {
       "minWeight",
       "maxWeight",
       "price",
+      "methodId",
     ],
   })
     .search()
@@ -135,8 +188,9 @@ const getAllPricing = async (queryParams: IQueryParams) => {
         destinationZone: true,
         category: true,
         speed: true,
+        method: true,
       },
-      ["originalZone", "destinationZone", "speed", "category"],
+      ["originalZone", "destinationZone", "speed", "category", "method"],
     )
     .paginate();
 
@@ -158,17 +212,17 @@ const getPricingById = async (id: string, queryParams: IQueryParams) => {
       ["originalZone", "destinationZone", "speed", "category", "method"],
     );
 
-  const pricingRules = await prisma.pricing.findMany(
+  const pricing = await prisma.pricing.findMany(
     queryBuilder.getQuery() as Parameters<typeof prisma.pricing.findMany>[0],
   );
 
-  return pricingRules[0] ?? null;
+  return pricing[0] ?? null;
 };
 
 const updatePricing = async (id: string, payload: UpdatePricingRulePayload) => {
   const updateData: Record<string, unknown> = {};
 
-  const existingPricingRule = await prisma.pricing.findUnique({
+  const existingPricing = await prisma.pricing.findUnique({
     where: { id },
     include: {
       speed: true,
@@ -176,16 +230,16 @@ const updatePricing = async (id: string, payload: UpdatePricingRulePayload) => {
     },
   });
 
-  if (!existingPricingRule) {
+  if (!existingPricing) {
     throw new AppError(status.NOT_FOUND, "Pricing rule not found");
   }
 
   if (payload.minWeight !== undefined) {
     // ensure minWeight is >= category base weight
-    if (payload.minWeight < existingPricingRule.category.baseWeight) {
+    if (payload.minWeight < existingPricing.category.baseWeight) {
       throw new AppError(
         status.BAD_REQUEST,
-        `Min weight must be greater than or equal to category base weight of ${existingPricingRule.category.baseWeight}`,
+        `Min weight must be greater than or equal to category base weight of ${existingPricing.category.baseWeight}`,
       );
     }
     updateData.minWeight = payload.minWeight;
@@ -209,10 +263,10 @@ const updatePricing = async (id: string, payload: UpdatePricingRulePayload) => {
 
   if (payload.price !== undefined) {
     // ensure price is >= service base fee
-    if (payload.price < Number(existingPricingRule.speed.baseFee)) {
+    if (payload.price < Number(existingPricing.speed.baseFee)) {
       throw new AppError(
         status.BAD_REQUEST,
-        `Price must be greater than or equal to speed base fee of ${existingPricingRule.speed.baseFee}`,
+        `Price must be greater than or equal to speed base fee of ${existingPricing.speed.baseFee}`,
       );
     }
     updateData.price = payload.price;

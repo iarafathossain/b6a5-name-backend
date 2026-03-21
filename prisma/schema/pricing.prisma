@@ -24,6 +24,8 @@ model Pricing {
     createdAt DateTime @default(now())
     updatedAt DateTime @updatedAt
 
+    // prevent duplicate pricing rules for the same zone, category, speed, and method combination
+    @@unique([originalZoneId, destinationZoneId, categoryId, speedId, methodId], name: "unique_pricing_rule")
     @@index([originalZoneId], name: "idx_pricing_original_zone_id")
     @@index([destinationZoneId], name: "idx_pricing_destination_zone_id")
     @@map("pricing")

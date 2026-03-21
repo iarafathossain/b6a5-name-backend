@@ -1,8 +1,9 @@
 model Category {
-    id         String @id @default(uuid(7)) @db.Uuid
+    id         String  @id @default(uuid(7)) @db.Uuid
     name       String
-    slug       String @unique
+    slug       String  @unique
     baseWeight Float
+    baseFee    Decimal @default(0.00) @db.Decimal(10, 2)
 
     parcels Parcel[]
     pricing Pricing[]

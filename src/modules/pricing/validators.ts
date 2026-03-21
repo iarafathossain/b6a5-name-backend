@@ -1,6 +1,6 @@
 import * as zod from "zod";
 
-export const createPricingRuleZodSchema = zod
+export const createPricingZodSchema = zod
   .object({
     originalZoneId: zod.uuid("Original zone ID must be a valid UUID"),
     destinationZoneId: zod.uuid("Destination zone ID must be a valid UUID"),
@@ -22,11 +22,9 @@ export const createPricingRuleZodSchema = zod
     path: ["minWeight"],
   });
 
-export type CreatePricingRulePayload = zod.infer<
-  typeof createPricingRuleZodSchema
->;
+export type CreatePricingRulePayload = zod.infer<typeof createPricingZodSchema>;
 
-export const updatePricingRuleZodSchema = zod
+export const updatePricingZodSchema = zod
   .object({
     originalZoneId: zod
       .uuid("Original zone ID must be a valid UUID")
@@ -67,6 +65,4 @@ export const updatePricingRuleZodSchema = zod
     },
   );
 
-export type UpdatePricingRulePayload = zod.infer<
-  typeof updatePricingRuleZodSchema
->;
+export type UpdatePricingRulePayload = zod.infer<typeof updatePricingZodSchema>;
